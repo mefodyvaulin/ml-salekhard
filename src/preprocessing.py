@@ -33,3 +33,14 @@ def calculate_mae_for_gaps(df_true: pd.DataFrame, df_pred: pd.DataFrame, mask: p
     
     mae = mean_absolute_error(true_values, pred_values)
     return mae
+
+def hampel_filter_df_outliers(df: pd.DataFrame, window_length=7, n_sigma=3) -> pd.DataFrame:
+    """Очищает датасет от выбросов с помощью фильтра Хампеля"""
+    from sktime.transformations.series.outlier_detection import HampelFilter
+    
+    filter = HampelFilter(window_length=window_length, n_sigma=n_sigma)
+    df_clean = df.copy()
+    for col in df_clean.columns:
+        df_clean[col] = filter.fit_transform(df_clean[col])
+
+    return df_clean
