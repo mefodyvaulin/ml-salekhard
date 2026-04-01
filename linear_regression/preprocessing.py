@@ -12,8 +12,6 @@ def preprocess_cycl_scale(df):
     df['day_year_sin'] = np.sin(2 * np.pi * df['day_of_year'] / 365.25)
     df['day_year_cos'] = np.cos(2 * np.pi * df['day_of_year'] / 365.25)
     feat = ['day_year_sin', 'day_year_cos']
-    if 'hour_sin' in df.columns:
-        feat += ['Год', 'hour_sin', 'hour_cos']
     return df, feat
 
 data_proc, base_feat = preprocess_cycl_scale(data)
