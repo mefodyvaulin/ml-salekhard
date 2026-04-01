@@ -59,6 +59,7 @@ for target in depth:
     plt.tight_layout()
     plt.show()
 
+
 results_df = pd.DataFrame(results)
 print("\nИтоговое сравнение:")
 print(results_df)
