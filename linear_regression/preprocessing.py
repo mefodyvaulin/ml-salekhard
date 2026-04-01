@@ -8,11 +8,12 @@ data['Дата'] = pd.to_datetime(data['Дата'])
 
 def preprocess_cycl_scale(df):
     df = df.copy()
-    df['month_sin'] = np.sin(2 * np.pi * df['Месяц'] / 12)
-    df['month_cos'] = np.cos(2 * np.pi * df['Месяц'] / 12)
-    df['day_sin'] = np.sin(2 * np.pi * df['День'] / 31)
-    df['day_cos'] = np.cos(2 * np.pi * df['День'] / 31)
-    features = ['Год', 'month_sin', 'month_cos', 'day_sin', 'day_cos']
-    return df, features
+    df['day_of_year'] = df['Дата'].dt.dayofyear
+    df['day_year_sin'] = np.sin(2 * np.pi * df['day_of_year'] / 365.25)
+    df['day_year_cos'] = np.cos(2 * np.pi * df['day_of_year'] / 365.25)
+    feat = ['day_year_sin', 'day_year_cos']
+    if 'hour_sin' in df.columns:
+        feat += ['Год', 'hour_sin', 'hour_cos']
+    return df, feat
 
 data_proc, base_feat = preprocess_cycl_scale(data)

@@ -7,13 +7,12 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 from linear_regression.preprocessing import data_proc, base_feat
 
 temp_podp = '48-Воздух (0)'
-depth = ['48-1 (3)', '48-1 (5)', '48-1 (10)']
+depth = ['48-1 (1)', '48-1 (3)', '48-1 (5)', '48-1 (10)']
 results = []
-
 for target in depth:
     print(f"\n Предсказание для глубины: {target}")
-    train_data = data_proc[data_proc['Год'] < 2025].dropna()
-    test_data = data_proc[data_proc['Год'] == 2025].dropna()
+    train_data = data_proc[data_proc['Год'] < 2025]
+    test_data = data_proc[data_proc['Год'] == 2025]
 
     feat_sets = {
         "Без температуры подполья": base_feat,
