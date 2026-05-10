@@ -50,6 +50,15 @@ def cycle_day_month(df: pd.DataFrame) -> pd.DataFrame:
     
     return df_copy
 
+def cycle(df: pd.DataFrame, col_name: str, period: int) -> pd.DataFrame:
+    """Зацикливает столбец с указанным периодом, добавляя новые признаки"""
+    df = df.copy()
+    
+    col = df[col_name]
+    df[f'{col_name}_sin'] = np.sin(2 * np.pi * (col - 1) / period)
+    df[f'{col_name}_cos'] = np.cos(2 * np.pi * (col - 1) / period)
+
+    return df
 
 def stl_decompose_df(df: pd.DataFrame, columns) -> pd.DataFrame:
     """Делает STL-декомпозицию заданных столбцов датафрейма"""

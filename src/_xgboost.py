@@ -14,12 +14,12 @@ def search_params(df_train, df_val, exog_cols, target_col):
         X_train = df_train[exog_cols]
         X_val = df_val[exog_cols]
     def objective(trial):
-        num_lags = trial.suggest_int('lags', 1, 30)
+        num_lags = trial.suggest_int('lags', 1, 5)
 
         param = {
-            'n_estimators': trial.suggest_int('n_estimators', 50, 3000),
+            'n_estimators': trial.suggest_int('n_estimators', 200, 1500),
             'learning_rate': trial.suggest_float('learning_rate', 0.0005, 0.7, log=True),
-            'max_depth': trial.suggest_int('max_depth', 1, 25),
+            'max_depth': trial.suggest_int('max_depth', 1, 15),
             'subsample': trial.suggest_float('subsample', 0.4, 1.0),
             'colsample_bytree': trial.suggest_float('colsample_bytree', 0.4, 1.0),
             'colsample_bylevel': trial.suggest_float('colsample_bylevel', 0.4, 1.0),
