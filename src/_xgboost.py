@@ -5,7 +5,7 @@ from sklearn.metrics import mean_squared_error
 import numpy as np
 
 
-def search_params(df_train, df_val, exog_cols, target_col):
+def search_params(df_train, df_val, target_col, exog_cols = None, max_lags = 3, rollings = None, n_trials = 10):
     y_train = df_train[target_col]
     y_val = df_val[target_col]
     X_train = None
@@ -15,7 +15,7 @@ def search_params(df_train, df_val, exog_cols, target_col):
         X_val = df_val[exog_cols]
     
     def objective(trial):
-        num_lags = trial.suggest_int('lags', 1, 5)
+        num_lags = trial.suggest_int('lags', 1, max_lags)
 
         param = {
             'n_estimators': trial.suggest_int('n_estimators', 200, 1000),
@@ -38,7 +38,8 @@ def search_params(df_train, df_val, exog_cols, target_col):
         }
 
         model = ForecasterRecursive(xgb.XGBRegressor(**param), 
-                                    lags=num_lags)
+                                    lags=num_lags,
+                                    window_features=rollings)
 
         model.fit(
             y=y_train,
@@ -55,6 +56,6 @@ def search_params(df_train, df_val, exog_cols, target_col):
         return rmse
 
     study = optuna.create_study(direction='minimize')
-    study.optimize(objective, n_trials=10)
+    study.optimize(objective, n_trials=n_trials)
 
     return study
