@@ -35,3 +35,20 @@ def show_series_stl(series: pd.Series):
     
     plt.tight_layout()
     plt.show()
+
+
+def plot_forecast(y_true, y_pred, title="Прогноз vs Истинные значения"):
+    """Строит график сравнения истинных значений и прогноза"""
+    plt.figure(figsize=(12, 5))
+    
+    plt.plot(y_true.index, y_true.values, label='Истинные', color='blue', linewidth=1.5)
+    plt.plot(y_pred.index, y_pred.values, label='Прогноз', color='red', linestyle='--', linewidth=1.5)
+    
+    plt.xlabel('Дата')
+    plt.ylabel('Значение')
+    plt.title(title)
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()

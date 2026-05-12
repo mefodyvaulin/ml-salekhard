@@ -6,3 +6,6 @@ scikit-learn
 statsmodels
 scipy
 pmdarima
+skforecast
+catboost
+xgboost
