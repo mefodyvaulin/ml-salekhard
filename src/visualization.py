@@ -52,3 +52,36 @@ def plot_forecast(y_true, y_pred, title="Прогноз vs Истинные зн
     plt.xticks(rotation=45)
     plt.tight_layout()
     plt.show()
+    
+def plot_forecast_with_train(X_train, y_true, y_pred, title="Прогноз vs Истинные значения"):
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 5))
+    
+    if not y_pred.index.equals(y_true.index):
+        y_pred.index = y_true.index
+    
+    ax1.plot(y_true.index, y_true.values, label='Истинные', color='blue', linewidth=1.5)
+    ax1.plot(y_pred.index, y_pred.values, label='Прогноз', color='red', linestyle='--', linewidth=1.5)
+    ax1.set_xlabel('Дата')
+    ax1.set_ylabel('Значение')
+    ax1.set_title('Тестовый период')
+    ax1.legend()
+    ax1.grid(True, alpha=0.3)
+    ax1.tick_params(axis='x', rotation=45)
+    
+    ax2.plot(X_train.index, X_train.values, 
+             label='Исторические (X_train)', color='green', linewidth=1.5, alpha=0.7)
+    ax2.plot(y_true.index, y_true.values, 
+             label='Истинные (тест)', color='blue', linewidth=1.5)
+    ax2.plot(y_pred.index, y_pred.values, 
+             label='Прогноз', color='red', linestyle='--', linewidth=1.5)
+    ax2.set_xlabel('Дата')
+    ax2.set_ylabel('Значение')
+    ax2.set_title('Полный период (история + тест)')
+    ax2.legend()
+    ax2.grid(True, alpha=0.3)
+    ax2.tick_params(axis='x', rotation=45)
+    
+    fig.suptitle(title, fontsize=14, fontweight='bold')
+    
+    plt.tight_layout()
+    plt.show()

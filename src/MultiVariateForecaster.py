@@ -1,4 +1,3 @@
-from skforecast.direct import ForecasterDirectMultiVariate
 import pandas as pd
 
 

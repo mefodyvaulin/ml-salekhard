@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import re
+
 
 def extract_year_month_day(df: pd.DataFrame) -> pd.DataFrame:
     """Преобразует столбец с датой в три столбца - год, месяц, день.
@@ -84,3 +86,64 @@ def stl_decompose_df(df: pd.DataFrame, columns) -> pd.DataFrame:
         df_res[f'{col} resid'] = resid
 
     return df_res
+
+def transform_depth(df: pd.DataFrame, air_name: str) -> pd.DataFrame:
+    df = df.copy()
+    
+    df.columns = [col.replace(',', '.') for col in df.columns]
+    
+    depth_cols = [col for col in df.columns if re.search(r'\d+-\d+ \(\d+\.?\d*\)', col)]
+    other_cols = [col for col in df.columns if col not in depth_cols and col != air_name]
+    
+    df_long = df.melt(
+        id_vars=other_cols + [air_name], 
+        value_vars=depth_cols,
+        var_name='Исходная_глубина', 
+        value_name='Температура'
+    )
+
+    df_long['Глубина'] = df_long['Исходная_глубина'].str.extract(r'\((\d+\.?\d*)\)').astype(float)
+
+    air_df = df[other_cols + [air_name]].copy()
+    air_df['Температура'] = air_df[air_name]
+    air_df['Глубина'] = -1.0
+    air_df = air_df.drop(columns=[air_name])
+
+    df_final = pd.concat([air_df, df_long.drop(columns=['Исходная_глубина', air_name])], ignore_index=True)
+    
+    return df_final
+
+def untransform_depth(df: pd.DataFrame, air_name: str) -> pd.DataFrame:
+    """Разворачивает данные из длинного формата (long) обратно в широкий (wide).
+    
+    Args:
+        df (pd.DataFrame): Датафрейм после transform_depth
+        air_name (str): Название столбца для температуры воздуха (глубина -1.0)
+    """
+    df = df.copy()
+
+    # Разделяем на температуру воздуха и остальные данные
+    air_df = df[df['Глубина'] == -1.0].copy()
+    depth_df = df[df['Глубина'] != -1.0].copy()
+
+    # Возвращаем воздух: переименовываем Температуру обратно в air_name
+    air_df[air_name] = air_df['Температура']
+    air_df = air_df.drop(columns=['Глубина', 'Температура'])
+
+    # Превращаем Глубину обратно в названия исходных столбцов
+    # Нам нужно восстановить строку вида "номер-номер (число)"
+    # Если точные исходные префиксы (например, "48-1") не сохранены, 
+    # придется использовать шаблон или хранить отображение.
+    # Предположим, мы восстанавливаем формат "Depth (число)" или просто "Глубина (число)"
+    depth_df['col_name'] = depth_df['Глубина'].apply(lambda x: f'Глубина ({x})')
+
+    # Разворачиваем (Pivot)
+    other_cols = [col for col in depth_df.columns if col not in ['Глубина', 'Температура', 'col_name']]
+    df_wide = depth_df.pivot(index=other_cols, columns='col_name', values='Температура').reset_index()
+    df_wide.columns.name = None
+
+    # Объединяем с данными о воздухе
+    # Используем merge по общим колонкам (времени/признакам)
+    final_df = pd.merge(air_df, df_wide, on=other_cols)
+
+    return final_df
