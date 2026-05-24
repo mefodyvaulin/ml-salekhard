@@ -37,7 +37,7 @@ def show_series_stl(series: pd.Series):
     plt.show()
 
 
-def plot_forecast(y_true, y_pred, title="Прогноз vs Истинные значения"):
+def plot_forecast(y_true: pd.DataFrame, y_pred: pd.DataFrame, title="Прогноз vs Истинные значения"):
     """Строит график сравнения истинных значений и прогноза"""
     plt.figure(figsize=(12, 5))
     
