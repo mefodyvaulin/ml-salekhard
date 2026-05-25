@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 
 def show_series_stl(series: pd.Series):
     """Строит графики STL-декомпозиции заданного ряда"""
@@ -34,6 +35,15 @@ def show_series_stl(series: pd.Series):
     ax4.legend(loc='upper left')
     
     plt.tight_layout()
+    plt.show()
+    
+def show_acf_pacf(series: pd.Series, lags = 400):
+    """Строит графики ACF и PACF для ряда"""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
+    plot_acf(series, lags=lags, ax=ax1)
+    ax1.set_title(f'ACF: {series.name}')
+    plot_pacf(series, lags=lags, ax=ax2)
+    ax2.set_title(f'PACF: {series.name}')
     plt.show()
 
 
