@@ -1,0 +1,20 @@
+[33mb41abf0[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m HEAD@{0}: rebase (finish): returning to refs/heads/main
+[33mb41abf0[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m HEAD@{1}: rebase (start): checkout b41abf0e66975b6f1565fe4cdd323a2c1ff3ddb4
+[33mcd96fe3[m HEAD@{2}: rebase (finish): returning to refs/heads/main
+[33mcd96fe3[m HEAD@{3}: rebase (pick): add archive models
+[33mb41abf0[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m HEAD@{4}: rebase (start): checkout origin/main
+[33m9ea1152[m HEAD@{5}: rebase (finish): returning to refs/heads/main
+[33m9ea1152[m HEAD@{6}: rebase (pick): add archive models
+[33m013be08[m HEAD@{7}: rebase (start): checkout origin/main
+[33m9c5e3f3[m HEAD@{8}: commit: add archive models
+[33m78a0ee2[m HEAD@{9}: rebase (finish): returning to refs/heads/main
+[33m78a0ee2[m HEAD@{10}: rebase (start): checkout origin/main
+[33mbac402c[m HEAD@{11}: commit: add None param for trend and season
+[33m73eb7e3[m HEAD@{12}: commit: add cv
+[33m9ec233c[m HEAD@{13}: merge origin/main: Fast-forward
+[33ma00d6ee[m HEAD@{14}: commit: add gridSearch
+[33m6176310[m HEAD@{15}: merge origin/main: Fast-forward
+[33m39c5b05[m HEAD@{16}: commit: rename to fitted
+[33m5bab54a[m HEAD@{17}: commit: add Exponential smoothing
+[33m12bd562[m HEAD@{18}: merge origin/main: Fast-forward
+[33m0e3e850[m HEAD@{19}: clone: from https://github.com/mefodyvaulin/ml-salekhard
