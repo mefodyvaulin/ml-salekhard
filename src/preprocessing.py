@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from src.features import cycle
 
 def create_gaps_in_df(df: pd.DataFrame, columns='all', num_blocks=6, block_size=3, seed=42) -> pd.DataFrame:
     """Создает пропуски в датафрейме в виде блоков"""
@@ -44,3 +45,22 @@ def hampel_filter_df_outliers(df: pd.DataFrame, window_length=7, n_sigma=3) -> p
         df_clean[col] = filter.fit_transform(df_clean[col])
 
     return df_clean
+
+def process_dataframe(data: pd.DataFrame, start_date: str = '2020-11-27') -> pd.DataFrame:
+    df = data.copy()
+    df = df.asfreq('D')
+    
+    df['day_of_year'] = df['Дата'].dt.dayofyear
+    df = cycle(df, 'Месяц', 12)
+    df = cycle(df, 'day_of_year', 365)
+    
+    start_date = pd.to_datetime(start_date)
+    df['days_from_start'] = (df['Дата'] - start_date).dt.days
+    
+    df['is_anomaly'] = np.where(df['Дата'] <= '2021-05-17', 1, 0)
+    
+    df = df.drop(columns=['Дата'])
+    
+    df = df.interpolate(method='akima').ffill().bfill().round(2)
+
+    return df

@@ -25,7 +25,63 @@ class LSTMRegressor(nn.Module):
         last_time_step_out = out[:, -1, :]
         
         return self.out(last_time_step_out)
+
+
+class CNNLSTMRegressor(nn.Module):
+    def __init__(
+        self,
+        num_features,
+        num_depths,
+        kernel_depth=3,
+        kernel_time=1,
+        out_channels=16,
+        lstm_hidden_size=16,
+        lstm_num_layers=1
+    ):
+        super().__init__()
+        self.num_features = num_features
+        self.num_depths = num_depths
     
+        self.conv2d = nn.Conv2d(
+            in_channels=1,
+            out_channels=out_channels,
+            kernel_size=(kernel_depth, kernel_time),
+            padding=(kernel_depth // 2, kernel_time // 2)
+        )
+
+        self.relu = nn.ReLU()
+        
+        lstm_input_size = (num_depths * out_channels) + num_features
+        
+        self.lstm = nn.LSTM(
+            input_size=lstm_input_size,
+            hidden_size=lstm_hidden_size,
+            num_layers=lstm_num_layers,
+            batch_first=True,
+            dropout = 0.1 if lstm_num_layers > 1 else 0
+        )
+        self.out = nn.Linear(lstm_hidden_size, num_depths)
+    
+    def forward(self, x):
+        x_other = x[:, :, :self.num_features]
+        x_depths = x[:, :, self.num_features:]
+        
+        c = x_depths.permute(0, 2, 1).unsqueeze(1)
+
+        c = self.conv2d(c)
+        c = self.relu(c)
+
+        c = c.permute(0, 3, 1, 2)
+        batch_size, seq_len, _, _ = c.shape
+        c = c.reshape(batch_size, seq_len, -1)
+
+        lstm_input = torch.cat([x_other, c], dim=-1)
+
+        lstm_out, _ = self.lstm(lstm_input)
+        last_out = lstm_out[:, -1, :]
+        
+        return self.out(last_out)
+
 
 def train_lstm_recursive_val(
     model: nn.Module,
