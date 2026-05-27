@@ -58,7 +58,7 @@ class CNNLSTMRegressor(nn.Module):
             hidden_size=lstm_hidden_size,
             num_layers=lstm_num_layers,
             batch_first=True,
-            dropout = 0.1 if lstm_num_layers > 1 else 0
+            dropout = 0.2 if lstm_num_layers > 1 else 0
         )
         self.out = nn.Linear(lstm_hidden_size, num_depths)
     
@@ -81,6 +81,25 @@ class CNNLSTMRegressor(nn.Module):
         last_out = lstm_out[:, -1, :]
         
         return self.out(last_out)
+
+
+def predict(model: nn.Module, start_lags, future_features, device='cpu'):
+    model.eval()
+    current_lags = start_lags.clone().to(device)
+    future_features = future_features.to(device)
+    y_pred = []
+    
+    with torch.no_grad():
+        for i in range(len(future_features)):
+            lags_tensor = current_lags.unsqueeze(0)
+            pred = model(lags_tensor)
+            y_pred.append(pred.cpu().numpy()[0])
+
+            next_step_features = future_features[i]
+            next_step_vector = torch.cat((next_step_features, pred[0]))
+            current_lags = torch.vstack((current_lags[1:], next_step_vector))
+
+    return np.array(y_pred)
 
 
 def train_lstm_recursive_val(
@@ -135,25 +154,12 @@ def train_lstm_recursive_val(
         train_loss /= len(train_loader.dataset)
 
         if val_loader is not None:
-            model.eval()
-            current_lags = X_val[0].clone().to(device)
-            y_pred_scaled = []
+            start_lags = X_val[0]
+            future_val_features = X_val[:, -1, :num_features]
             
-            with torch.no_grad():
-                for i in range(len(X_val)):
-                    lags_tensor = current_lags.unsqueeze(0)
-                    pred = model(lags_tensor).cpu()
-                    y_pred_scaled.append(pred.numpy()[0])
-                    
-                    if i < len(X_val) - 1:
-                        next_step_features = X_val[i+1, -1, :num_features].to(device)
-                        pred_tensor = pred[0].to(device)
-                        
-                        next_step_vector = torch.cat((next_step_features, pred_tensor))
-                        current_lags = torch.vstack((current_lags[1:], next_step_vector))
-                        
-            y_pred_scaled = np.array(y_pred_scaled)
-            y_pred = target_scaler.inverse_transform(y_pred_scaled)
+            y_pred = predict(model, start_lags, future_val_features, device=device)
+
+            y_pred = target_scaler.inverse_transform(y_pred)
 
             val_rmse = root_mean_squared_error(y_val_true, y_pred)
             val_rmse_hist.append(val_rmse)
