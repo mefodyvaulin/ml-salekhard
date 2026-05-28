@@ -110,7 +110,6 @@ def train_lstm_recursive_val(
     val_loader: DataLoader = None,
     reg_type='none',
     lambda_l1=1e-3,
-    target_scaler: StandardScaler = None,
     epochs: int = 100,
     device: str = 'cpu',
     max_epochs_no_improvement=10,
@@ -123,11 +122,9 @@ def train_lstm_recursive_val(
     val_rmse_hist = []
     
     if val_loader is not None:
-        X_val, y_val_scaled_true = val_loader.dataset.tensors
-        num_targets = y_val_scaled_true.shape[1]
+        X_val, y_val_true = val_loader.dataset.tensors
+        num_targets = y_val_true.shape[1]
         num_features = X_val.shape[2] - num_targets
-
-        y_val_true = target_scaler.inverse_transform(y_val_scaled_true.numpy())
 
     for epoch in range(epochs):
         model.train()
@@ -158,8 +155,6 @@ def train_lstm_recursive_val(
             future_val_features = X_val[:, -1, :num_features]
             
             y_pred = predict(model, start_lags, future_val_features, device=device)
-
-            y_pred = target_scaler.inverse_transform(y_pred)
 
             val_rmse = root_mean_squared_error(y_val_true, y_pred)
             val_rmse_hist.append(val_rmse)
