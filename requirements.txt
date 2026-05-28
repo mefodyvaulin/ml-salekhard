@@ -9,3 +9,6 @@ pmdarima
 skforecast
 catboost
 xgboost
+torch
+pytorch_lightning
+darts
