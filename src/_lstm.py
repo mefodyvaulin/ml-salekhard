@@ -90,11 +90,11 @@ def predict(model: nn.Module, start_lags, future_features, device='cpu'):
     y_pred = []
     
     with torch.no_grad():
-        for i in range(len(future_features)):
+        for i in range(len(future_features)):     
             lags_tensor = current_lags.unsqueeze(0)
             pred = model(lags_tensor)
             y_pred.append(pred.cpu().numpy()[0])
-
+            
             next_step_features = future_features[i]
             next_step_vector = torch.cat((next_step_features, pred[0]))
             current_lags = torch.vstack((current_lags[1:], next_step_vector))
@@ -108,6 +108,7 @@ def train_lstm_recursive_val(
     optimizer,
     train_loader: DataLoader,
     val_loader: DataLoader = None,
+    val_future_features: torch.Tensor = None,
     reg_type='none',
     lambda_l1=1e-3,
     epochs: int = 100,
@@ -123,8 +124,6 @@ def train_lstm_recursive_val(
     
     if val_loader is not None:
         X_val, y_val_true = val_loader.dataset.tensors
-        num_targets = y_val_true.shape[1]
-        num_features = X_val.shape[2] - num_targets
 
     for epoch in range(epochs):
         model.train()
@@ -150,11 +149,10 @@ def train_lstm_recursive_val(
         
         train_loss /= len(train_loader.dataset)
 
-        if val_loader is not None:
+        if val_loader is not None and val_future_features is not None:
             start_lags = X_val[0]
-            future_val_features = X_val[:, -1, :num_features]
             
-            y_pred = predict(model, start_lags, future_val_features, device=device)
+            y_pred = predict(model, start_lags, val_future_features, device=device)
 
             val_rmse = root_mean_squared_error(y_val_true, y_pred)
             val_rmse_hist.append(val_rmse)
