@@ -55,7 +55,7 @@ def plot_forecast(y_true: pd.DataFrame, y_pred: pd.DataFrame, title="Прогн�
     plt.plot(y_pred.index, y_pred.values, label='Прогноз', color='red', linestyle='--', linewidth=1.5)
     
     plt.xlabel('Дата')
-    plt.ylabel('Значение')
+    plt.ylabel('Температура')
     plt.title(title)
     plt.legend()
     plt.grid(True, alpha=0.3)
