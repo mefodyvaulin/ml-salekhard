@@ -47,7 +47,12 @@ def show_acf_pacf(series: pd.Series, lags = 400):
     plt.show()
 
 
-def plot_forecast(y_true: pd.DataFrame, y_pred: pd.DataFrame, title="Прогноз vs Истина", metrics_dict = None):
+def plot_forecast(
+    y_true: pd.DataFrame,
+    y_pred: pd.DataFrame,
+    title="Прогноз vs Истина",
+    metrics_dict: dict = None
+):
     """Строит график сравнения истинных значений и прогноза"""
     plt.figure(figsize=(12, 5))
     
@@ -70,7 +75,13 @@ def plot_forecast(y_true: pd.DataFrame, y_pred: pd.DataFrame, title="Прогн�
     plt.tight_layout()
     plt.show()
     
-def plot_forecast_with_train(X_train, y_true, y_pred, title="Прогноз vs Истина", metrics_dict = None):
+def plot_forecast_with_train(
+    X_train,
+    y_true,
+    y_pred,
+    title="Прогноз vs Истина",
+    metrics_dict: dict = None
+):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 5))
     
     if not y_pred.index.equals(y_true.index):
