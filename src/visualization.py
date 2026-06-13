@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+from src.evaluation import evaluate, evaluate_by_depth
 
 def show_series_stl(series: pd.Series):
     """Строит графики STL-декомпозиции заданного ряда"""
@@ -46,6 +47,51 @@ def show_acf_pacf(series: pd.Series, lags = 400):
     ax2.set_title(f'PACF: {series.name}')
     plt.show()
 
+def evaluate_and_plot_full_forecast(
+    y_true: pd.DataFrame,
+    y_pred: pd.DataFrame,
+    target_cols: list[str],
+    df_train_full: pd.DataFrame,
+    required_interval: tuple[str, str] | None = None,
+    borehole_name: str | None = None,
+):
+    eval_dict = evaluate(y_true, y_pred)
+    print(pd.DataFrame(eval_dict, index=['Значение для всех глубин']))
+
+    eval_by_depth_df = evaluate_by_depth(y_true.values, y_pred.values, target_cols)
+    
+    if required_interval:
+        y_required_time_true = y_true[required_interval[0] : required_interval[1]]
+        y_required_time_pred = y_pred[required_interval[0] : required_interval[1]]
+        required_time_metrics = evaluate(y_required_time_true.values, y_required_time_pred.values)
+
+    for col in target_cols:
+        metrics_dict = eval_by_depth_df.loc[col][1:].to_dict()
+        
+        col_split = col.split()
+        if len(col_split) > 1:
+            depth = col_split[1]
+        else:
+            depth = col_split[0]
+        
+        plot_forecast_with_train(
+            df_train_full[col],
+            pd.DataFrame(y_true[col]),
+            pd.DataFrame(y_pred[col]),
+            metrics_dict=metrics_dict,
+            title=(f'Прогноз температуры в скважине {borehole_name} '
+                   f'на глубине {depth}')
+        )
+        
+        if required_interval:
+            plot_forecast(
+                pd.DataFrame(y_required_time_true[col]),
+                pd.DataFrame(y_required_time_pred[col]),
+                metrics_dict=required_time_metrics,
+                title=(f'Прогноз температуры на период ' 
+                    f'{required_interval[0]} - {required_interval[1]} '
+                    f'в скважине {borehole_name} на глубине {depth}')
+            )
 
 def plot_forecast(
     y_true: pd.DataFrame,
@@ -71,7 +117,7 @@ def plot_forecast(
         plt.gca().text(0.02, 0.98, metrics_text, transform=plt.gca().transAxes, 
                        fontsize=10, verticalalignment='top',
                        bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-        
+
     plt.tight_layout()
     plt.show()
     
@@ -114,7 +160,7 @@ def plot_forecast_with_train(
         ax1.text(0.02, 0.98, metrics_text, transform=ax1.transAxes, 
                  fontsize=10, verticalalignment='top',
                  bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-    
+            
     fig.suptitle(title, fontsize=14, fontweight='bold')
     
     plt.tight_layout()
