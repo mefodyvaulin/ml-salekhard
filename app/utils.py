@@ -1,7 +1,9 @@
+import re
 import sys
 from pathlib import Path
 import numpy as np
 import pandas as pd
+
 if str(Path(__file__).parent.parent.resolve()) not in sys.path:
     sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 from src.features import cycle
@@ -22,6 +24,22 @@ def prepare_dataframe(data):
     return df.asfreq("D")
 
 
+def parse_monitoring_csv(file) -> pd.DataFrame:
+    df = pd.read_csv(file, sep=";", decimal=",")
+    df["Дата"] = pd.to_datetime(df["Дата"], format="%Y.%m.%d")
+    df = df.drop(columns=["Время"], errors="ignore")
+    df = df.set_index("Дата")
+    internal_prefixes = {"48-1", "48-Воздух"}
+    rename_map = {}
+    for col in df.columns:
+        match = re.match(r"^(.+)\s+\((.+)\)$", col)
+        if match and match.group(1) not in internal_prefixes:
+            rename_map[col] = f"48-1 ({match.group(2)})"
+    df = df.rename(columns=rename_map)
+    df["Дата"] = df.index
+    return df.asfreq("D")
+
+
 def interpolate_numeric(df):
     numeric_cols = df.select_dtypes(include=[np.number]).columns
     if len(numeric_cols) == 0:
@@ -31,7 +49,7 @@ def interpolate_numeric(df):
     return df
 
 
-def process_data(data, include_is_anomaly = False):
+def process_data(data, include_is_anomaly=False):
     df = prepare_dataframe(data)
     df["day_of_year"] = df["Дата"].dt.dayofyear
     df = cycle(df, "Месяц", 12)

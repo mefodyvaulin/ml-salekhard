@@ -7,7 +7,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import StandardScaler
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
-from utils import ensure_skforecast_compat, process_data, process_linear_regression
+from utils import ensure_skforecast_compat, process_data, process_linear_regression, prepare_dataframe
 
 
 class BaseForecaster:
@@ -118,6 +118,7 @@ class ARIMAWrapper(BaseForecaster):
         "48-1 (5)": "arima_cv_5.pkl",
         "48-1 (10)": "arima_cv_10.pkl",
     }
+    model_training_end = pd.Timestamp("2024-12-31")
 
     def __init__(self, models_dir):
         self.models_dir = models_dir
@@ -222,6 +223,55 @@ class LinearRegressionWrapper(BaseForecaster):
         return pd.DataFrame(results, index=future_exog.index)
 
 
+class Seq2SeqGRUV3Wrapper(BaseForecaster):
+    FEATURE_COLS = ['Месяц_sin', 'Месяц_cos', 'day_of_year_sin', 'day_of_year_cos', 'is_anomaly']
+    TARGET_COLS = [
+        '48-1 (0)', '48-1 (0,5)', '48-1 (1)', '48-1 (1,5)',
+        '48-1 (2)', '48-1 (2,5)', '48-1 (3)', '48-1 (3,5)',
+        '48-1 (4)', '48-1 (4,5)', '48-1 (5)', '48-1 (6)',
+        '48-1 (7)', '48-1 (8)', '48-1 (9)', '48-1 (10)',
+    ]
+
+    def __init__(self, model_path):
+        self.model = torch.load(model_path, weights_only=False, map_location='cpu')
+        self.model.eval()
+        self.target_cols = self.TARGET_COLS
+        self.depth_columns = self.TARGET_COLS
+
+        project_root = Path(model_path).parent.parent.parent
+        train_csv = project_root / "data/processed/train_raw, ZK 68, (48-1, 48-air), 27.11.20-31.12.24.csv"
+
+        df_raw = pd.read_csv(str(train_csv), parse_dates=["Дата"])
+        df_raw.index = df_raw["Дата"]
+        df_full = process_data(df_raw, include_is_anomaly=True)
+        df_train = df_full.loc[:'2023-12-31']
+
+        self.feature_scaler = StandardScaler()
+        self.target_scaler = StandardScaler()
+        self.feature_scaler.fit(df_train[self.FEATURE_COLS])
+        self.target_scaler.fit(df_train[self.TARGET_COLS])
+
+    def predict(self, history_df, steps, future_exog):
+        from src.models.rnn.predict import predict_seq2seq
+
+        df_history = history_df[self.FEATURE_COLS + self.TARGET_COLS]
+        df_test = future_exog[self.FEATURE_COLS]
+
+        result = predict_seq2seq(
+            model=self.model,
+            df_history=df_history,
+            df_test=df_test,
+            history_len=30,
+            horizon=5,
+            feature_cols=self.FEATURE_COLS,
+            target_cols=self.TARGET_COLS,
+            feature_scaler=self.feature_scaler,
+            target_scaler=self.target_scaler,
+        )
+
+        return result[self.TARGET_COLS]
+
+
 MODEL_CONFIG = {
     "XGBoost_v7": {
         "path": "xgboost/models/xgb_v7",
@@ -259,5 +309,11 @@ MODEL_CONFIG = {
         "preprocess": process_linear_regression,
         "min_history": 30,
         "data_file": "data/processed/ZK 68, (48-1, 48-air), 27.11.20-15.12.25.csv",
+    },
+    "GRU Seq2Seq v3": {
+        "path": "rnn/models/gru_seq2seq_v3_best.pth",
+        "wrapper": Seq2SeqGRUV3Wrapper,
+        "preprocess": lambda df: process_data(df, include_is_anomaly=True),
+        "min_history": 30,
     },
 }
