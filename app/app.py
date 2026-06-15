@@ -5,7 +5,7 @@ from pathlib import Path
 from models_handler import MODEL_CONFIG
 from utils import build_future_frame, parse_monitoring_csv, prepare_dataframe
 
-st.set_page_config(page_title="Прогноз температурного режима почвы в Салехарде", layout="wide")
+st.set_page_config(page_title="Прогноз температурного режима грунта в Салехарде", layout="wide")
 
 DEFAULT_DATA_FILE = "data/processed/ZK 68, (48-1, 48-air), 27.11.20-15.12.25.csv"
 
