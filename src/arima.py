@@ -56,32 +56,3 @@ def grid_search_cv(train, d, p_range, q_range, k_range, cv, X=None):
     best_pipe.fit(train, X)
     print(f"Best Model = {best_pipe.named_steps['arima']}, k = {best_k}")
     return best_pipe
-
-def plot_forecast(train, test, forecast):
-    plt.figure(figsize=(14, 6))
-
-    if hasattr(train, 'index'):
-        plt.plot(train.index, train, label='Train', color='blue', alpha=0.6)
-        plt.plot(test.index, test, label='Actual', color='green', linewidth=1.5)
-        plt.plot(test.index, forecast, label='Forecast', color='red', linewidth=2)
-        plt.xlabel('Дата')
-        plt.xticks(rotation=45)
-    else:
-        plt.plot(train, label='Train', color='blue', alpha=0.6)
-        plt.plot(test, label='Actual', color='green', linewidth=1.5)
-        plt.plot(forecast, label='Forecast', color='red', linewidth=2)
-        plt.xlabel('Наблюдение')
-
-    plt.title('Прогноз: ARIMA + FourierFeaturizer')
-    plt.ylabel('Значение')
-    plt.legend()
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    plt.show()
-
-
-def print_metrics(forecast, test):
-    mae = mean_absolute_error(test, forecast)
-    rmse = np.sqrt(mean_squared_error(test, forecast))
-    print(f"\nMAE: {mae:.2f}")
-    print(f"RMSE: {rmse:.2f}")
